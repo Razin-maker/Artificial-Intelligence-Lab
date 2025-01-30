@@ -35,3 +35,16 @@ Task-06: Write a python program to generate Fibonacci series.
 
 Output:
 
+![6](https://github.com/user-attachments/assets/7259bfec-9ee4-42dc-860e-d742ca86534d)
+
+Task-07: Write a python program to find the largest number between two numbers using function
+
+Output:
+
+![7](https://github.com/user-attachments/assets/023c8de9-bb8b-44a6-b557-6b7c619de98f)
+
+Task-08: Write a python program to find the sum of the numbers passed as parameters.
+
+Output:
+
+![8](https://github.com/user-attachments/assets/365ca269-6168-4c56-8a49-2a8452b05607)
