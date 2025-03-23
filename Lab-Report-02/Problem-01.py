@@ -29,12 +29,10 @@ def iddfs(maze, start, target):
 
     return "No path found"
 
-# User input
 rows, cols = map(int, input("Enter maze dimensions (rows cols): ").split())
 print("Enter maze row by row (0 for empty, 1 for wall):")
 maze = [list(map(int, input().split())) for _ in range(rows)]
 start = tuple(map(int, input("Enter start cell (row col): ").split()))
 target = tuple(map(int, input("Enter target cell (row col): ").split()))
 
-# Output result
 print(iddfs(maze, start, target))
