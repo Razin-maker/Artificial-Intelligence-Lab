@@ -2,7 +2,7 @@ import time
 import random
 from collections import deque
 
-# ===================== Solvable State Generation =====================
+#  Solvable State Generation 
 
 def is_solvable(state, size=3):
     inv_count = 0
@@ -20,7 +20,7 @@ def generate_random_state(size=3):
         if is_solvable(state, size):
             return tuple(state)
 
-# ===================== Puzzle Neighbors =====================
+# Puzzle Neighbors 
 
 def get_neighbors_puzzle(state, size=3):
     neighbors = []
@@ -39,7 +39,7 @@ def get_neighbors_puzzle(state, size=3):
         neighbors.append(tuple(new_state))
     return neighbors
 
-# ===================== Search Algorithms =====================
+# Search Algorithms 
 
 def bfs_solver(initial, goal, get_neighbors):
     start_time = time.time()
@@ -124,7 +124,7 @@ def iddfs_solver(initial, goal, get_neighbors, max_depth_limit):
         total_nodes_expanded += nodes_expanded[0]
     return None, total_nodes_expanded, time.time() - start_time
 
-# ===================== Performance Comparison =====================
+# Performance Comparison 
 
 def compare_algorithms(initial, goal, get_neighbors, max_depth):
     results = {}
@@ -156,7 +156,7 @@ def compare_algorithms(initial, goal, get_neighbors, max_depth):
     else:
         print("\n❌ None of the algorithms found a solution.")
 
-# ===================== Main Program =====================
+# Main Program 
 
 def main():
     print("8-Puzzle Solver")
