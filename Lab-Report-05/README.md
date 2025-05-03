@@ -6,4 +6,5 @@ Output-01:
 
 Output-02:
 
-![41](https://github.com/user-attachments/assets/dbdcb372-5973-463f-ad39-cf0974c20ffb)
+![42](https://github.com/user-attachments/assets/73991ddc-7967-43d6-9f03-074272e550a7)
+
