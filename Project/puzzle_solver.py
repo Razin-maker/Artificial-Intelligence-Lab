@@ -2,226 +2,238 @@ import time
 import random
 from collections import deque
 
-#  Solvable State Generation 
+# ===================== 8‑Puzzle: Solvable State Generation =====================
 
 def is_solvable(state, size=3):
     inv_count = 0
-    state_list = [num for num in state if num != 0]
-    for i in range(len(state_list)):
-        for j in range(i + 1, len(state_list)):
-            if state_list[i] > state_list[j]:
+    lst = [x for x in state if x != 0]
+    for i in range(len(lst)):
+        for j in range(i+1, len(lst)):
+            if lst[i] > lst[j]:
                 inv_count += 1
     return inv_count % 2 == 0
 
 def generate_random_state(size=3):
-    state = list(range(size * size))
+    state = list(range(size*size))
     while True:
         random.shuffle(state)
         if is_solvable(state, size):
             return tuple(state)
 
-# Puzzle Neighbors 
+# ===================== 8‑Puzzle Neighbor Generation (with Moves) =====================
 
 def get_neighbors_puzzle(state, size=3):
+    """
+    Returns list of (neighbor_state, move) where move is one of 'Up','Down','Left','Right'.
+    """
     neighbors = []
-    zero_index = state.index(0)
-    r, c = divmod(zero_index, size)
-    moves = []
-    if r > 0: moves.append((-1, 0))
-    if r < size - 1: moves.append((1, 0))
-    if c > 0: moves.append((0, -1))
-    if c < size - 1: moves.append((0, 1))
-    for dr, dc in moves:
-        new_r, new_c = r + dr, c + dc
-        new_index = new_r * size + new_c
-        new_state = list(state)
-        new_state[zero_index], new_state[new_index] = new_state[new_index], new_state[zero_index]
-        neighbors.append(tuple(new_state))
+    zero = state.index(0)
+    r, c = divmod(zero, size)
+    directions = [(-1,0,'Up'), (1,0,'Down'), (0,-1,'Left'), (0,1,'Right')]
+    for dr, dc, move in directions:
+        nr, nc = r+dr, c+dc
+        if 0 <= nr < size and 0 <= nc < size:
+            ni = nr*size + nc
+            s = list(state)
+            s[zero], s[ni] = s[ni], s[zero]
+            neighbors.append((tuple(s), move))
     return neighbors
 
-# Search Algorithms 
+# ===================== Tower of Hanoi Neighbor Generation =====================
+
+def get_neighbors_hanoi(state):
+    """
+    Returns list of (neighbor_state, move) where move describes disk and pegs.
+    """
+    neighbors = []
+    for i in range(3):
+        if not state[i]: continue
+        disk = state[i][-1]
+        for j in range(3):
+            if i != j and (not state[j] or state[j][-1] > disk):
+                new_pegs = [list(peg) for peg in state]
+                new_pegs[j].append(new_pegs[i].pop())
+                move = f"Move disk{disk} from peg{i+1} to peg{j+1}"
+                neighbors.append((tuple(tuple(peg) for peg in new_pegs), move))
+    return neighbors
+
+# ===================== Search Algorithms =====================
 
 def bfs_solver(initial, goal, get_neighbors):
-    start_time = time.time()
+    start = time.time()
     frontier = deque([initial])
-    parent = {initial: None}
-    nodes_expanded = 0
+    parent = {initial: (None, None)}  # state -> (parent_state, move)
+    nodes = 0
     while frontier:
-        state = frontier.popleft()
-        nodes_expanded += 1
-        if state == goal:
-            end_time = time.time()
-            path = []
-            while state is not None:
-                path.append(state)
-                state = parent[state]
-            return list(reversed(path)), nodes_expanded, end_time - start_time
-        for neighbor in get_neighbors(state):
-            if neighbor not in parent:
-                parent[neighbor] = state
-                frontier.append(neighbor)
-    return None, nodes_expanded, time.time() - start_time
+        s = frontier.popleft()
+        nodes += 1
+        if s == goal:
+            # reconstruct path and moves
+            path, moves = [], []
+            cur = s
+            while cur is not None:
+                p, m = parent[cur]
+                path.append(cur)
+                moves.append(m)
+                cur = p
+            path.reverse(); moves.reverse()
+            return path, moves[1:], nodes, time.time() - start
+        for nbr, move in get_neighbors(s):
+            if nbr not in parent:
+                parent[nbr] = (s, move)
+                frontier.append(nbr)
+    return None, None, nodes, time.time() - start
 
 def dfs_solver(initial, goal, get_neighbors, max_depth):
-    start_time = time.time()
-    nodes_expanded = [0]
-    parent = {initial: None}
+    start = time.time()
+    nodes = [0]
+    parent = {initial: (None, None)}
     found = [None]
 
-    def dfs_recursive(state, depth):
-        nodes_expanded[0] += 1
-        if state == goal:
-            found[0] = state
+    def dfs(s, depth):
+        nodes[0] += 1
+        if s == goal:
+            found[0] = s
             return True
         if depth == 0:
             return False
-        for neighbor in get_neighbors(state):
-            if neighbor not in parent:
-                parent[neighbor] = state
-                if dfs_recursive(neighbor, depth - 1):
+        for nbr, move in get_neighbors(s):
+            if nbr not in parent:
+                parent[nbr] = (s, move)
+                if dfs(nbr, depth-1):
                     return True
         return False
 
-    success = dfs_recursive(initial, max_depth)
-    if success:
-        path = []
-        state = found[0]
-        while state is not None:
-            path.append(state)
-            state = parent[state]
-        return list(reversed(path)), nodes_expanded[0], time.time() - start_time
-    else:
-        return None, nodes_expanded[0], time.time() - start_time
+    if not dfs(initial, max_depth):
+        return None, None, nodes[0], time.time() - start
+    path, moves = [], []
+    cur = found[0]
+    while cur is not None:
+        p, m = parent[cur]
+        path.append(cur)
+        moves.append(m)
+        cur = p
+    path.reverse(); moves.reverse()
+    return path, moves[1:], nodes[0], time.time() - start
 
-def iddfs_solver(initial, goal, get_neighbors, max_depth_limit):
-    start_time = time.time()
-    total_nodes_expanded = 0
-
-    def dls(state, depth, parent, nodes_expanded):
-        nodes_expanded[0] += 1
-        if state == goal:
-            return True
-        if depth == 0:
+def iddfs_solver(initial, goal, get_neighbors, max_depth):
+    start = time.time()
+    total = 0
+    for depth in range(1, max_depth+1):
+        parent = {initial: (None, None)}
+        nodes = [0]
+        def dls(s, d):
+            nodes[0] += 1
+            if s == goal:
+                return True
+            if d == 0:
+                return False
+            for nbr, move in get_neighbors(s):
+                if nbr not in parent:
+                    parent[nbr] = (s, move)
+                    if dls(nbr, d-1):
+                        return True
             return False
-        for neighbor in get_neighbors(state):
-            if neighbor not in parent:
-                parent[neighbor] = state
-                if dls(neighbor, depth - 1, parent, nodes_expanded):
-                    return True
-        return False
+        if dls(initial, depth):
+            path, moves = [], []
+            cur = goal
+            while cur is not None:
+                p, m = parent[cur]
+                path.append(cur)
+                moves.append(m)
+                cur = p
+            path.reverse(); moves.reverse()
+            return path, moves[1:], total + nodes[0], time.time() - start
+        total += nodes[0]
+    return None, None, total, time.time() - start
 
-    for depth in range(1, max_depth_limit + 1):
-        parent = {initial: None}
-        nodes_expanded = [0]
-        if dls(initial, depth, parent, nodes_expanded):
-            total_nodes_expanded += nodes_expanded[0]
-            path = []
-            state = goal
-            while state is not None:
-                path.append(state)
-                state = parent[state]
-            return list(reversed(path)), total_nodes_expanded, time.time() - start_time
-        total_nodes_expanded += nodes_expanded[0]
-    return None, total_nodes_expanded, time.time() - start_time
-
-# Performance Comparison 
+# ===================== Performance Comparison =====================
 
 def compare_algorithms(initial, goal, get_neighbors, max_depth):
     results = {}
-
     print("\nComparing BFS...")
-    bfs_path, bfs_nodes, bfs_time = bfs_solver(initial, goal, get_neighbors)
-    results['BFS'] = (bfs_path, bfs_nodes, bfs_time)
-
+    results['BFS'] = bfs_solver(initial, goal, get_neighbors)
     print("Comparing DFS...")
-    dfs_path, dfs_nodes, dfs_time = dfs_solver(initial, goal, get_neighbors, max_depth)
-    results['DFS'] = (dfs_path, dfs_nodes, dfs_time)
-
+    results['DFS'] = dfs_solver(initial, goal, get_neighbors, max_depth)
     print("Comparing IDDFS...")
-    iddfs_path, iddfs_nodes, iddfs_time = iddfs_solver(initial, goal, get_neighbors, max_depth)
-    results['IDDFS'] = (iddfs_path, iddfs_nodes, iddfs_time)
-
+    results['IDDFS'] = iddfs_solver(initial, goal, get_neighbors, max_depth)
     print("\n--- Comparison Results ---")
-    for name, (path, nodes, time_taken) in results.items():
+    for name, (path, moves, nodes, t) in results.items():
         if path:
-            print(f"{name}: Moves = {len(path) - 1}, Nodes Expanded = {nodes}, Time = {time_taken:.4f} sec")
+            print(f"{name}: moves={len(path)-1}, nodes={nodes}, time={t:.4f}s")
         else:
-            print(f"{name}: No solution found.")
-
-    # Determine best (lowest move count)
-    solved = {k: v for k, v in results.items() if v[0] is not None}
+            print(f"{name}: no solution")
+    solved = {n:r for n,r in results.items() if r[0]}
     if solved:
-        best = min(solved.items(), key=lambda x: len(x[1][0]) - 1)
-        print(f"\n🏆 Best Performance: {best[0]} with {len(best[1][0]) - 1} moves")
+        best = min(solved.items(), key=lambda kv: len(kv[1][0])-1)
+        print(f"\n🏆 Best: {best[0]} in {len(best[1][0])-1} moves")
     else:
-        print("\n❌ None of the algorithms found a solution.")
+        print("\n❌ No algorithm solved it.")
 
-# Main Program 
+# ===================== Main Program =====================
 
 def main():
-    print("8-Puzzle Solver")
-    print("========================")
-    size = 3
-    goal = tuple(range(1, size * size)) + (0,)
-    initial = generate_random_state(size)
+    print("Puzzle Solver")
+    print("=======================")
+    print("1) 8‑Puzzle (3×3)")
+    print("2) Tower of Hanoi")
+    choice = input("Enter 1 or 2: ").strip()
 
-    print("\nInitial State:")
-    for i in range(size):
-        print(initial[i*size:(i+1)*size])
-
-    print("\nGoal State:")
-    for i in range(size):
-        print(goal[i*size:(i+1)*size])
-
-    print("\nSelect Option:")
-    print("1. BFS")
-    print("2. DFS (with max depth)")
-    print("3. IDDFS (Iterative Deepening DFS)")
-    print("4. Compare Performance")
-    algo_choice = input("Enter choice (1, 2, 3, or 4): ").strip()
-
-    if algo_choice in ["2", "3", "4"]:
-        try:
-            max_depth = int(input("Enter max depth for DFS/IDDFS: ").strip())
-        except ValueError:
-            max_depth = 50
+    if choice == "1":
+        size = 3
+        goal = tuple(range(1, size*size)) + (0,)
+        initial = generate_random_state(size)
+        get_nbrs = lambda s: get_neighbors_puzzle(s, size)
+        print("\nInitial 8‑Puzzle:")
+        for i in range(size): print(initial[i*size:(i+1)*size])
+        print("\nGoal:")
+        for i in range(size): print(goal[i*size:(i+1)*size])
+    elif choice == "2":
+        n = int(input("Enter number of disks: ").strip())
+        initial = (tuple(range(n,0,-1)), (), ())
+        goal = ((), (), tuple(range(n,0,-1)))
+        get_nbrs = get_neighbors_hanoi
+        print("\nInitial Tower State:")
+        for pi,peg in enumerate(initial,1): print(f" Peg {pi}: {[f'disk{d}' for d in peg]}")
+        print("\nGoal:")
+        for pi,peg in enumerate(goal,1): print(f" Peg {pi}: {[f'disk{d}' for d in peg]}")
     else:
-        max_depth = None
+        print("Invalid"); return
 
-    get_neighbors = lambda state: get_neighbors_puzzle(state, size)
+    print("\nSelect Algorithm:")
+    print("1) BFS")
+    print("2) DFS (with max depth)")
+    print("3) IDDFS (with max depth)")
+    print("4) Compare Performance")
+    algo = input("Choice (1–4): ").strip()
+    md = None
+    if algo in ["2","3","4"]:
+        md = int(input("Enter max depth: ").strip())
 
-    if algo_choice == "4":
-        compare_algorithms(initial, goal, get_neighbors, max_depth)
+    if algo == "4":
+        compare_algorithms(initial, goal, get_nbrs, md)
         return
 
-    print("\nRunning algorithm...")
-    if algo_choice == "1":
-        solution, nodes, t_taken = bfs_solver(initial, goal, get_neighbors)
-        algo_name = "BFS"
-    elif algo_choice == "2":
-        solution, nodes, t_taken = dfs_solver(initial, goal, get_neighbors, max_depth)
-        algo_name = "DFS"
-    elif algo_choice == "3":
-        solution, nodes, t_taken = iddfs_solver(initial, goal, get_neighbors, max_depth)
-        algo_name = "IDDFS"
-    else:
-        print("Invalid algorithm choice.")
-        return
+    print("\nRunning...")
+    if algo == "1": sol, moves, nodes, t = bfs_solver(initial, goal, get_nbrs); name="BFS"
+    elif algo == "2": sol, moves, nodes, t = dfs_solver(initial, goal, get_nbrs, md); name="DFS"
+    elif algo == "3": sol, moves, nodes, t = iddfs_solver(initial, goal, get_nbrs, md); name="IDDFS"
+    else: print("Invalid"); return
 
-    print("\nAlgorithm Used:", algo_name)
-    if solution is None:
-        print("No solution found within the given limits.")
+    print(f"\n{name} Results:")
+    if not sol:
+        print(" No solution.")
     else:
-        print("Solution found!")
-        for idx, state in enumerate(solution):
-            print(f"Step {idx}:")
-            for i in range(size):
-                print(state[i*size:(i+1)*size])
+        for i,(st,mv) in enumerate(zip(sol, [None]+moves)):
+            print(f"Step {i}: Move: {mv}" if mv else f"Step {i}: Start")
+            if choice == "1":
+                for r in range(size): print(st[r*size:(r+1)*size])
+            else:
+                for pi,peg in enumerate(st,1): print(f" Peg {pi}: {[f'disk{d}' for d in peg]}")
             print("---")
-        print("Number of moves:", len(solution) - 1)
-
-    print("Nodes expanded:", nodes)
-    print("Time taken: {:.4f} seconds".format(t_taken))
+        print(f"Moves: {len(sol)-1}")
+    print(f"Nodes expanded: {nodes}")
+    print(f"Time: {t:.4f}s")
 
 if __name__ == "__main__":
     main()
