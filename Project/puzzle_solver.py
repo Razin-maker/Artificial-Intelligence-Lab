@@ -2,8 +2,6 @@ import time
 import random
 from collections import deque
 
-# 8‑Puzzle: Solvable State Generation
-
 def is_solvable(state, size=3):
     inv_count = 0
     lst = [x for x in state if x != 0]
@@ -20,12 +18,9 @@ def generate_random_state(size=3):
         if is_solvable(state, size):
             return tuple(state)
 
-# 8‑Puzzle Neighbor Generation (with Moves) 
 
 def get_neighbors_puzzle(state, size=3):
-    """
-    Returns list of (neighbor_state, move) where move is one of 'Up','Down','Left','Right'.
-    """
+    
     neighbors = []
     zero = state.index(0)
     r, c = divmod(zero, size)
@@ -39,7 +34,6 @@ def get_neighbors_puzzle(state, size=3):
             neighbors.append((tuple(s), move))
     return neighbors
 
-# Tower of Hanoi Neighbor Generation 
 
 def get_neighbors_hanoi(state):
     """
@@ -57,18 +51,18 @@ def get_neighbors_hanoi(state):
                 neighbors.append((tuple(tuple(peg) for peg in new_pegs), move))
     return neighbors
 
-# Search Algorithms
+
 
 def bfs_solver(initial, goal, get_neighbors):
     start = time.time()
     frontier = deque([initial])
-    parent = {initial: (None, None)}  # state -> (parent_state, move)
+    parent = {initial: (None, None)}  
     nodes = 0
     while frontier:
         s = frontier.popleft()
         nodes += 1
         if s == goal:
-            # reconstruct path and moves
+            
             path, moves = [], []
             cur = s
             while cur is not None:
@@ -147,7 +141,7 @@ def iddfs_solver(initial, goal, get_neighbors, max_depth):
         total += nodes[0]
     return None, None, total, time.time() - start
 
-# Performance Comparison 
+
 
 def compare_algorithms(initial, goal, get_neighbors, max_depth):
     results = {}
@@ -170,7 +164,7 @@ def compare_algorithms(initial, goal, get_neighbors, max_depth):
     else:
         print("\n❌ No algorithm solved it.")
 
-# Main Program 
+
 
 def main():
     print("Puzzle Solver")
