@@ -1,5 +1,14 @@
 # BusBD Demo Guide
 
+## ✨ **New Modern UI with Enhanced Features!**
+
+### 🎨 **Updated Design Features:**
+- **Modern Color Palette**: Beautiful blue-purple gradient theme
+- **Aesthetic Modals**: Redesigned login/registration panels with gradient headers
+- **Enhanced Animations**: Smooth transitions and hover effects
+- **Improved Responsiveness**: Better mobile experience
+- **Fixed Functionality**: All login, registration, and booking features now working perfectly
+
 ## How to Test the Website
 
 ### 1. Open the Website

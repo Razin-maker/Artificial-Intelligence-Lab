@@ -131,25 +131,28 @@ function updateLoginStatus() {
 // Initialize login status on page load
 updateLoginStatus();
 
-// Modal functions
-function showLoginModal() {
+// Modal functions - Make them global
+window.showLoginModal = function() {
     document.getElementById('loginModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
-function showRegisterModal() {
+window.showRegisterModal = function() {
     document.getElementById('registerModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
 }
 
-function closeModal(modalId) {
+window.closeModal = function(modalId) {
     document.getElementById(modalId).style.display = 'none';
+    document.body.style.overflow = 'auto';
 }
 
-function switchToRegister() {
+window.switchToRegister = function() {
     closeModal('loginModal');
     showRegisterModal();
 }
 
-function switchToLogin() {
+window.switchToLogin = function() {
     closeModal('registerModal');
     showLoginModal();
 }
@@ -167,8 +170,8 @@ window.onclick = function(event) {
     }
 }
 
-// Login form handling
-function handleLogin(event) {
+// Login form handling - Make it global
+window.handleLogin = function(event) {
     event.preventDefault();
     
     const email = document.getElementById('loginEmail').value;
@@ -195,8 +198,8 @@ function handleLogin(event) {
     }
 }
 
-// Registration form handling
-function handleRegister(event) {
+// Registration form handling - Make it global
+window.handleRegister = function(event) {
     event.preventDefault();
     
     const firstName = document.getElementById('firstName').value;
@@ -275,8 +278,8 @@ function showMessage(message, type) {
     }, 5000);
 }
 
-// Bus search functionality
-function searchBuses() {
+// Bus search functionality - Make it global
+window.searchBuses = function() {
     const from = document.getElementById('from').value;
     const to = document.getElementById('to').value;
     const date = document.getElementById('date').value;
@@ -414,8 +417,8 @@ function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Book bus function
-function bookBus(busName, from, to, date, price) {
+// Book bus function - Make it global
+window.bookBus = function(busName, from, to, date, price) {
     if (!currentUser) {
         showMessage('Please login to book a ticket!', 'error');
         showLoginModal();
@@ -513,8 +516,8 @@ function addLoadingState() {
 }
 
 // Override search function to include loading
-const originalSearchBuses = searchBuses;
-searchBuses = function() {
+const originalSearchBuses = window.searchBuses;
+window.searchBuses = function() {
     addLoadingState();
     setTimeout(originalSearchBuses, 1000);
 };
