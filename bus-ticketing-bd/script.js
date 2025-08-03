@@ -148,13 +148,13 @@ window.closeModal = function(modalId) {
 }
 
 window.switchToRegister = function() {
-    closeModal('loginModal');
-    showRegisterModal();
+    window.closeModal('loginModal');
+    window.showRegisterModal();
 }
 
 window.switchToLogin = function() {
-    closeModal('registerModal');
-    showLoginModal();
+    window.closeModal('registerModal');
+    window.showLoginModal();
 }
 
 // Close modal when clicking outside
@@ -163,10 +163,10 @@ window.onclick = function(event) {
     const registerModal = document.getElementById('registerModal');
     
     if (event.target === loginModal) {
-        closeModal('loginModal');
+        window.closeModal('loginModal');
     }
     if (event.target === registerModal) {
-        closeModal('registerModal');
+        window.closeModal('registerModal');
     }
 }
 
