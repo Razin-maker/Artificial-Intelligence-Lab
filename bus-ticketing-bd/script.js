@@ -1,10 +1,173 @@
-// Set minimum date to today
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('date');
-    const today = new Date().toISOString().split('T')[0];
-    dateInput.min = today;
-    dateInput.value = today;
-});
+// Global function definitions - Define these first so they're available immediately
+function showLoginModal() {
+    document.getElementById('loginModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function showRegisterModal() {
+    document.getElementById('registerModal').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+function switchToRegister() {
+    closeModal('loginModal');
+    showRegisterModal();
+}
+
+function switchToLogin() {
+    closeModal('registerModal');
+    showLoginModal();
+}
+
+function handleLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+    
+    // Find user
+    const user = users.find(u => 
+        (u.email === email || u.phone === email) && u.password === password
+    );
+    
+    if (user) {
+        currentUser = user;
+        localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
+        
+        showMessage('Login successful! Welcome back, ' + user.firstName, 'success');
+        closeModal('loginModal');
+        updateLoginStatus();
+        
+        // Clear form
+        document.getElementById('loginForm').reset();
+    } else {
+        showMessage('Invalid email/phone or password. Please try again.', 'error');
+    }
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const email = document.getElementById('registerEmail').value;
+    const phone = document.getElementById('phone').value;
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const agreeTerms = document.getElementById('agreeTerms').checked;
+    
+    // Validation
+    if (password !== confirmPassword) {
+        showMessage('Passwords do not match!', 'error');
+        return;
+    }
+    
+    if (password.length < 6) {
+        showMessage('Password must be at least 6 characters long!', 'error');
+        return;
+    }
+    
+    if (!agreeTerms) {
+        showMessage('Please agree to the terms and conditions!', 'error');
+        return;
+    }
+    
+    // Check if user already exists
+    const existingUser = users.find(u => u.email === email || u.phone === phone);
+    if (existingUser) {
+        showMessage('User with this email or phone already exists!', 'error');
+        return;
+    }
+    
+    // Create new user
+    const newUser = {
+        id: Date.now(),
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        registeredAt: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    localStorage.setItem('busbd_users', JSON.stringify(users));
+    
+    // Auto login
+    currentUser = newUser;
+    localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
+    
+    showMessage('Registration successful! Welcome to BusBD, ' + firstName, 'success');
+    closeModal('registerModal');
+    updateLoginStatus();
+    
+    // Clear form
+    document.getElementById('registerForm').reset();
+}
+
+function searchBuses() {
+    const from = document.getElementById('from').value;
+    const to = document.getElementById('to').value;
+    const date = document.getElementById('date').value;
+    
+    if (!from || !to || !date) {
+        showMessage('Please fill in all search fields!', 'error');
+        return;
+    }
+    
+    if (from === to) {
+        showMessage('Origin and destination cannot be the same!', 'error');
+        return;
+    }
+    
+    // Add loading state
+    addLoadingState();
+    
+    setTimeout(() => {
+        const routeKey = `${from}-${to}`;
+        const reverseRouteKey = `${to}-${from}`;
+        
+        let buses = busData[routeKey] || busData[reverseRouteKey] || [];
+        
+        if (buses.length === 0) {
+            buses = generateRandomBuses(from, to);
+        }
+        
+        displayBusResults(buses, from, to, date);
+    }, 1500);
+}
+
+function bookBus(busName, from, to, date, price) {
+    if (!currentUser) {
+        showMessage('Please login to book a ticket!', 'error');
+        showLoginModal();
+        return;
+    }
+    
+    // In a real application, this would redirect to a booking page
+    const bookingDetails = {
+        busName,
+        from,
+        to,
+        date,
+        price,
+        passenger: currentUser.firstName + ' ' + currentUser.lastName,
+        bookingId: 'BUS' + Date.now()
+    };
+    
+    showMessage(`Booking confirmed! Bus: ${busName} from ${from} to ${to} on ${date}. Booking ID: ${bookingDetails.bookingId}`, 'success');
+    
+    // Store booking (in real app, this would go to a server)
+    const bookings = JSON.parse(localStorage.getItem('busbd_bookings')) || [];
+    bookings.push(bookingDetails);
+    localStorage.setItem('busbd_bookings', JSON.stringify(bookings));
+}
 
 // Sample bus data for Bangladesh routes
 const busData = {
@@ -128,137 +291,6 @@ function updateLoginStatus() {
     }
 }
 
-// Initialize login status on page load
-updateLoginStatus();
-
-// Modal functions - Make them global
-window.showLoginModal = function() {
-    document.getElementById('loginModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-window.showRegisterModal = function() {
-    document.getElementById('registerModal').style.display = 'block';
-    document.body.style.overflow = 'hidden';
-}
-
-window.closeModal = function(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    document.body.style.overflow = 'auto';
-}
-
-window.switchToRegister = function() {
-    window.closeModal('loginModal');
-    window.showRegisterModal();
-}
-
-window.switchToLogin = function() {
-    window.closeModal('registerModal');
-    window.showLoginModal();
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    const loginModal = document.getElementById('loginModal');
-    const registerModal = document.getElementById('registerModal');
-    
-    if (event.target === loginModal) {
-        window.closeModal('loginModal');
-    }
-    if (event.target === registerModal) {
-        window.closeModal('registerModal');
-    }
-}
-
-// Login form handling - Make it global
-window.handleLogin = function(event) {
-    event.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-    
-    // Find user
-    const user = users.find(u => 
-        (u.email === email || u.phone === email) && u.password === password
-    );
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
-        
-        showMessage('Login successful! Welcome back, ' + user.firstName, 'success');
-        closeModal('loginModal');
-        updateLoginStatus();
-        
-        // Clear form
-        document.getElementById('loginForm').reset();
-    } else {
-        showMessage('Invalid email/phone or password. Please try again.', 'error');
-    }
-}
-
-// Registration form handling - Make it global
-window.handleRegister = function(event) {
-    event.preventDefault();
-    
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const email = document.getElementById('registerEmail').value;
-    const phone = document.getElementById('phone').value;
-    const password = document.getElementById('registerPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const agreeTerms = document.getElementById('agreeTerms').checked;
-    
-    // Validation
-    if (password !== confirmPassword) {
-        showMessage('Passwords do not match!', 'error');
-        return;
-    }
-    
-    if (password.length < 6) {
-        showMessage('Password must be at least 6 characters long!', 'error');
-        return;
-    }
-    
-    if (!agreeTerms) {
-        showMessage('Please agree to the terms and conditions!', 'error');
-        return;
-    }
-    
-    // Check if user already exists
-    const existingUser = users.find(u => u.email === email || u.phone === phone);
-    if (existingUser) {
-        showMessage('User with this email or phone already exists!', 'error');
-        return;
-    }
-    
-    // Create new user
-    const newUser = {
-        id: Date.now(),
-        firstName,
-        lastName,
-        email,
-        phone,
-        password,
-        registeredAt: new Date().toISOString()
-    };
-    
-    users.push(newUser);
-    localStorage.setItem('busbd_users', JSON.stringify(users));
-    
-    // Auto login
-    currentUser = newUser;
-    localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
-    
-    showMessage('Registration successful! Welcome to BusBD, ' + firstName, 'success');
-    closeModal('registerModal');
-    updateLoginStatus();
-    
-    // Clear form
-    document.getElementById('registerForm').reset();
-}
-
 // Show message function
 function showMessage(message, type) {
     // Remove existing messages
@@ -276,34 +308,6 @@ function showMessage(message, type) {
     setTimeout(() => {
         messageDiv.remove();
     }, 5000);
-}
-
-// Bus search functionality - Make it global
-window.searchBuses = function() {
-    const from = document.getElementById('from').value;
-    const to = document.getElementById('to').value;
-    const date = document.getElementById('date').value;
-    
-    if (!from || !to || !date) {
-        showMessage('Please fill in all search fields!', 'error');
-        return;
-    }
-    
-    if (from === to) {
-        showMessage('Origin and destination cannot be the same!', 'error');
-        return;
-    }
-    
-    const routeKey = `${from}-${to}`;
-    const reverseRouteKey = `${to}-${from}`;
-    
-    let buses = busData[routeKey] || busData[reverseRouteKey] || [];
-    
-    if (buses.length === 0) {
-        buses = generateRandomBuses(from, to);
-    }
-    
-    displayBusResults(buses, from, to, date);
 }
 
 // Generate random buses for routes not in sample data
@@ -417,33 +421,6 @@ function capitalizeFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Book bus function - Make it global
-window.bookBus = function(busName, from, to, date, price) {
-    if (!currentUser) {
-        showMessage('Please login to book a ticket!', 'error');
-        showLoginModal();
-        return;
-    }
-    
-    // In a real application, this would redirect to a booking page
-    const bookingDetails = {
-        busName,
-        from,
-        to,
-        date,
-        price,
-        passenger: currentUser.firstName + ' ' + currentUser.lastName,
-        bookingId: 'BUS' + Date.now()
-    };
-    
-    showMessage(`Booking confirmed! Bus: ${busName} from ${from} to ${to} on ${date}. Booking ID: ${bookingDetails.bookingId}`, 'success');
-    
-    // Store booking (in real app, this would go to a server)
-    const bookings = JSON.parse(localStorage.getItem('busbd_bookings')) || [];
-    bookings.push(bookingDetails);
-    localStorage.setItem('busbd_bookings', JSON.stringify(bookings));
-}
-
 // User menu function (placeholder)
 function showUserMenu() {
     const userMenu = confirm(`Hi ${currentUser.firstName}!\n\nChoose an option:\nOK - View Profile\nCancel - Logout`);
@@ -460,47 +437,6 @@ function showUserMenu() {
     }
 }
 
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
-// Mobile navigation toggle
-const hamburger = document.querySelector('.hamburger');
-const navMenu = document.querySelector('.nav-menu');
-
-if (hamburger) {
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-    });
-}
-
-// Contact form handling
-document.querySelector('.contact-form form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const name = this.querySelector('input[type="text"]').value;
-    const email = this.querySelector('input[type="email"]').value;
-    const message = this.querySelector('textarea').value;
-    
-    if (name && email && message) {
-        showMessage('Thank you for your message! We will get back to you soon.', 'success');
-        this.reset();
-    } else {
-        showMessage('Please fill in all fields!', 'error');
-    }
-});
-
 // Add loading state to search button
 function addLoadingState() {
     const searchBtn = document.querySelector('.btn-search');
@@ -512,12 +448,76 @@ function addLoadingState() {
     setTimeout(() => {
         searchBtn.innerHTML = originalText;
         searchBtn.disabled = false;
-    }, 1000);
+    }, 1500);
 }
 
-// Override search function to include loading
-const originalSearchBuses = window.searchBuses;
-window.searchBuses = function() {
-    addLoadingState();
-    setTimeout(originalSearchBuses, 1000);
-};
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Set minimum date to today
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+        dateInput.value = today;
+    }
+    
+    // Initialize login status
+    updateLoginStatus();
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        
+        if (event.target === loginModal) {
+            closeModal('loginModal');
+        }
+        if (event.target === registerModal) {
+            closeModal('registerModal');
+        }
+    }
+    
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Mobile navigation toggle
+    const hamburger = document.querySelector('.hamburger');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (hamburger) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+    }
+    
+    // Contact form handling
+    const contactForm = document.querySelector('.contact-form form');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = this.querySelector('input[type="text"]').value;
+            const email = this.querySelector('input[type="email"]').value;
+            const message = this.querySelector('textarea').value;
+            
+            if (name && email && message) {
+                showMessage('Thank you for your message! We will get back to you soon.', 'success');
+                this.reset();
+            } else {
+                showMessage('Please fill in all fields!', 'error');
+            }
+        });
+    }
+});
