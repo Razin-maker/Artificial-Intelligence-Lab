@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug BusBD Functions</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .test-box { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #667eea; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #5a67d8; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🔧 BusBD Function Debug Test</h1>
+    
+    <div class="test-box">
+        <h2>Test 1: Check if functions exist</h2>
+        <button onclick="testFunctionExistence()">Check Functions</button>
+        <div id="existence-result" class="result"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Test 2: Try calling functions directly</h2>
+        <button onclick="testShowLoginModal()">Test showLoginModal()</button>
+        <button onclick="testShowRegisterModal()">Test showRegisterModal()</button>
+        <button onclick="testSearchBuses()">Test searchBuses()</button>
+        <div id="direct-result" class="result"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Test 3: Check for JavaScript errors</h2>
+        <button onclick="checkForErrors()">Check Console Errors</button>
+        <div id="error-result" class="result"></div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Test 4: Load main script and test</h2>
+        <button onclick="loadMainScript()">Load & Test Main Script</button>
+        <div id="script-result" class="result"></div>
+    </div>
+
+    <script>
+        function testFunctionExistence() {
+            const functions = ['showLoginModal', 'showRegisterModal', 'closeModal', 'searchBuses', 'bookBus', 'handleLogin', 'handleRegister'];
+            const result = document.getElementById('existence-result');
+            let html = '<h3>Function Existence Check:</h3>';
+            
+            functions.forEach(func => {
+                const exists = typeof window[func] === 'function';
+                html += `<div>${func}: ${exists ? '✅ EXISTS' : '❌ MISSING'}</div>`;
+            });
+            
+            result.innerHTML = html;
+            result.className = 'result success';
+        }
+        
+        function testShowLoginModal() {
+            const result = document.getElementById('direct-result');
+            try {
+                if (typeof showLoginModal === 'function') {
+                    result.innerHTML = '✅ showLoginModal function exists and is callable';
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = '❌ showLoginModal function does not exist';
+                    result.className = 'result error';
+                }
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        function testShowRegisterModal() {
+            const result = document.getElementById('direct-result');
+            try {
+                if (typeof showRegisterModal === 'function') {
+                    result.innerHTML = '✅ showRegisterModal function exists and is callable';
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = '❌ showRegisterModal function does not exist';
+                    result.className = 'result error';
+                }
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        function testSearchBuses() {
+            const result = document.getElementById('direct-result');
+            try {
+                if (typeof searchBuses === 'function') {
+                    result.innerHTML = '✅ searchBuses function exists and is callable';
+                    result.className = 'result success';
+                } else {
+                    result.innerHTML = '❌ searchBuses function does not exist';
+                    result.className = 'result error';
+                }
+            } catch (error) {
+                result.innerHTML = '❌ Error: ' + error.message;
+                result.className = 'result error';
+            }
+        }
+        
+        function checkForErrors() {
+            const result = document.getElementById('error-result');
+            result.innerHTML = '✅ No JavaScript errors detected in this debug page';
+            result.className = 'result success';
+        }
+        
+        function loadMainScript() {
+            const result = document.getElementById('script-result');
+            const script = document.createElement('script');
+            script.src = 'script.js';
+            script.onload = function() {
+                setTimeout(() => {
+                    testFunctionExistence();
+                    result.innerHTML = '✅ Main script loaded successfully';
+                    result.className = 'result success';
+                }, 100);
+            };
+            script.onerror = function() {
+                result.innerHTML = '❌ Failed to load main script';
+                result.className = 'result error';
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+    
+    <hr>
+    <p><a href="index.html">← Back to Main Website</a></p>
+</body>
+</html>

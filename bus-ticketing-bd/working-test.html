@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working BusBD Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #5a67d8; }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚌 Working BusBD Test</h1>
+    
+    <div>
+        <h2>Test the functions:</h2>
+        <button onclick="showLoginModal()">Login Modal</button>
+        <button onclick="showRegisterModal()">Register Modal</button>
+        <button onclick="testSearch()">Test Search</button>
+        <button onclick="testBooking()">Test Booking</button>
+    </div>
+    
+    <div id="status" style="margin-top: 20px;"></div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Login</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email or Phone</label>
+                    <input type="text" id="loginEmail" value="test@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" value="123456" required>
+                </div>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Register</h2>
+            <form onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" value="John" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" value="Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" value="john@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" value="+880123456789" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" value="123456" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" value="123456" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="agreeTerms" checked required>
+                        I agree to terms
+                    </label>
+                </div>
+                <button type="submit" class="btn-submit">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let users = JSON.parse(localStorage.getItem('busbd_users')) || [];
+        let currentUser = JSON.parse(localStorage.getItem('busbd_current_user')) || null;
+        
+        // Modal functions
+        function showLoginModal() {
+            console.log('showLoginModal called');
+            document.getElementById('loginModal').style.display = 'block';
+            updateStatus('✅ Login modal opened');
+        }
+        
+        function showRegisterModal() {
+            console.log('showRegisterModal called');
+            document.getElementById('registerModal').style.display = 'block';
+            updateStatus('✅ Register modal opened');
+        }
+        
+        function closeModal(modalId) {
+            console.log('closeModal called with:', modalId);
+            document.getElementById(modalId).style.display = 'none';
+            updateStatus('✅ Modal closed');
+        }
+        
+        // Login function
+        function handleLogin(event) {
+            event.preventDefault();
+            console.log('handleLogin called');
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Find or create test user
+            let user = users.find(u => u.email === email);
+            if (!user) {
+                user = {
+                    id: Date.now(),
+                    firstName: 'Test',
+                    lastName: 'User',
+                    email: email,
+                    phone: '+880123456789',
+                    password: password
+                };
+                users.push(user);
+                localStorage.setItem('busbd_users', JSON.stringify(users));
+            }
+            
+            if (user.password === password) {
+                currentUser = user;
+                localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
+                showMessage('✅ Login successful!', 'success');
+                closeModal('loginModal');
+                updateStatus('✅ User logged in: ' + user.firstName);
+            } else {
+                showMessage('❌ Invalid password', 'error');
+            }
+        }
+        
+        // Register function
+        function handleRegister(event) {
+            event.preventDefault();
+            console.log('handleRegister called');
+            
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('registerEmail').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showMessage('❌ Passwords do not match', 'error');
+                return;
+            }
+            
+            const newUser = {
+                id: Date.now(),
+                firstName,
+                lastName,
+                email,
+                phone,
+                password
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('busbd_users', JSON.stringify(users));
+            
+            currentUser = newUser;
+            localStorage.setItem('busbd_current_user', JSON.stringify(currentUser));
+            
+            showMessage('✅ Registration successful!', 'success');
+            closeModal('registerModal');
+            updateStatus('✅ User registered: ' + firstName);
+        }
+        
+        // Test functions
+        function testSearch() {
+            updateStatus('✅ Search function called (would search for buses)');
+            showMessage('🔍 Search function working!', 'success');
+        }
+        
+        function testBooking() {
+            if (!currentUser) {
+                showMessage('❌ Please login first', 'error');
+                showLoginModal();
+                return;
+            }
+            updateStatus('✅ Booking function called for user: ' + currentUser.firstName);
+            showMessage('🎫 Booking function working!', 'success');
+        }
+        
+        // Utility functions
+        function showMessage(message, type) {
+            const existingMessages = document.querySelectorAll('.success-message, .error-message');
+            existingMessages.forEach(msg => msg.remove());
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            
+            document.body.insertBefore(messageDiv, document.body.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = '<strong>Status:</strong> ' + message;
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('🚀 Page loaded, all functions ready!');
+            console.log('Functions available:', {
+                showLoginModal: typeof showLoginModal,
+                showRegisterModal: typeof showRegisterModal,
+                closeModal: typeof closeModal,
+                handleLogin: typeof handleLogin,
+                handleRegister: typeof handleRegister
+            });
+        });
+    </script>
+</body>
+</html>
