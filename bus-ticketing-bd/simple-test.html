@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple BusBD Test</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Simple Function Test</h1>
+    
+    <!-- Test Buttons -->
+    <div style="padding: 20px;">
+        <button class="btn-login" onclick="showLoginModal()">Test Login Modal</button>
+        <button class="btn-register" onclick="showRegisterModal()">Test Register Modal</button>
+        <button onclick="searchBuses()">Test Search (will show error - that's ok)</button>
+    </div>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Welcome Back</h2>
+            <div class="modal-form-container">
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email or Phone</label>
+                        <input type="text" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Login</button>
+                    <p class="form-switch">Don't have an account? <a href="#" onclick="switchToRegister()">Register here</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Join BusBD</h2>
+            <div class="modal-form-container">
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" placeholder="+880" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="agreeTerms" required>
+                            <span class="checkmark"></span>
+                            I agree to the Terms and Conditions
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-submit">Create Account</button>
+                    <p class="form-switch">Already have an account? <a href="#" onclick="switchToLogin()">Login here</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script MUST be at the bottom -->
+    <script src="script.js"></script>
+    
+    <script>
+        // Additional debug info
+        console.log('Page loaded');
+        console.log('showLoginModal exists:', typeof showLoginModal);
+        console.log('showRegisterModal exists:', typeof showRegisterModal);
+        console.log('searchBuses exists:', typeof searchBuses);
+        
+        // Test if script loaded
+        setTimeout(() => {
+            const message = document.createElement('div');
+            message.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #4CAF50; color: white; padding: 10px; border-radius: 4px; z-index: 9999;';
+            
+            if (typeof showLoginModal === 'function') {
+                message.textContent = '✅ Functions loaded successfully!';
+                message.style.background = '#4CAF50';
+            } else {
+                message.textContent = '❌ Functions failed to load!';
+                message.style.background = '#f44336';
+            }
+            
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }, 1000);
+    </script>
+</body>
+</html>

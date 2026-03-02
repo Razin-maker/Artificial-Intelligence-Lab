@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BusBD Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>BusBD Functionality Test</h1>
+    
+    <div>
+        <h2>Test Buttons:</h2>
+        <button onclick="testLogin()">Test Login Modal</button>
+        <button onclick="testRegister()">Test Register Modal</button>
+        <button onclick="testSearch()">Test Bus Search</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <script>
+        function testLogin() {
+            if (typeof showLoginModal === 'function') {
+                document.getElementById('result').innerHTML = '<p style="color: green;">✓ Login function exists</p>';
+            } else {
+                document.getElementById('result').innerHTML = '<p style="color: red;">✗ Login function missing</p>';
+            }
+        }
+        
+        function testRegister() {
+            if (typeof showRegisterModal === 'function') {
+                document.getElementById('result').innerHTML = '<p style="color: green;">✓ Register function exists</p>';
+            } else {
+                document.getElementById('result').innerHTML = '<p style="color: red;">✗ Register function missing</p>';
+            }
+        }
+        
+        function testSearch() {
+            if (typeof searchBuses === 'function') {
+                document.getElementById('result').innerHTML = '<p style="color: green;">✓ Search function exists</p>';
+            } else {
+                document.getElementById('result').innerHTML = '<p style="color: red;">✗ Search function missing</p>';
+            }
+        }
+    </script>
+    
+    <hr>
+    <p><a href="index.html">← Back to Main Website</a></p>
+</body>
+</html>
